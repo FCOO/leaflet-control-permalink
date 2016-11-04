@@ -23315,8 +23315,8 @@ L.Map.include({
     function _upateSearchAndHash( searchStr, hashStr ){
         return this._updateAll( 
                    window.location.pathname + 
-                   (searchStr ? '?' + searchStr : '') + 
-                   (hashStr  ? '#' + hashStr  : '')
+                   (searchStr ? '?' + encodeURI(searchStr) : '') + 
+                   (hashStr  ? '#' + encodeURI(hashStr)  : '')
                );          
     }
 
@@ -23342,8 +23342,6 @@ L.Map.include({
         }
 
         //Chack and correct the parameter and/or hash-tag
-        preChar = preChar || '#';
-
         var strList,
             result = '',
             idRegEx = new RegExp(/[\w\-_]+/),
@@ -23520,7 +23518,6 @@ L.Map.include({
         convertJSON   : Boolean (default = true ) If true all values representing a stringify json-object is converted to a real json-object
         queryOverHash : Boolean (default = true ) If true and the same id is given in both query-string and hash-tag the value from query-string is returned. 
                                                   If false the value from hash-tag is returned
-        updateUrl     : Boolean (default = true ) If true failed {id=value} are removed and any defaultObj {id:value} added to the url
     }
 
     *******************************************/
@@ -23531,8 +23528,7 @@ L.Map.include({
             convertBoolean: true, 
             convertNumber : true, 
             convertJSON   : true,
-            queryOverHash : true, 
-            updateUrl     : true 
+            queryOverHash : true 
         }); 
         
         var _this = this;
@@ -23543,7 +23539,7 @@ L.Map.include({
             var obj = _this.parseQuery( str );
             //Use anyString(..) to get adjusted value
             $.each( obj, function( id/*, value*/ ){
-                obj[id] = anyString(id, true, '?'+str, '?');
+                obj[id] = anyString(id, false, '?'+str, '?');
             });
 
             //Validate all values
@@ -23575,13 +23571,6 @@ L.Map.include({
         var queryObj = parseObj( this._correctSearchOrHash( window.location.search, '?' ) ),
             hashObj  = parseObj( this._correctSearchOrHash( window.location.hash,   '#' ) );
 
-        //Update url
-        if (options.updateUrl)
-            this._upateSearchAndHash(
-                decodeURIComponent( this.stringify(queryObj) ),
-                decodeURIComponent( this.stringify(hashObj) )
-            );
-
         var result = $.extend( options.queryOverHash ? hashObj  : queryObj, 
                                options.queryOverHash ? queryObj : hashObj   ); 
         
@@ -23600,6 +23589,9 @@ L.Map.include({
         return result; 
     }
 
+    /******************************************
+    onHashChange()
+    ******************************************/
     function onHashChange(){
         this.adjustUrl();
     }
