@@ -23436,7 +23436,7 @@ L.Map.include({
     updateHashParam
     Same as updateSearchParam but for the hash
     *******************************************/
-    function updateHashParam(hashParam, value, triggerPopState){
+    function updateHashParam(hashParam, value, push, triggerPopState){
         var hashParsed = this.parseHash();
         if (value === undefined){
             delete hashParsed[hashParam];
@@ -23446,7 +23446,10 @@ L.Map.include({
                 return this;
             hashParsed[hashParam] = value;
         }
-        this.hash (this.stringify(hashParsed), triggerPopState);
+
+        var newHash = '#' + this.stringify(hashParsed);
+        this._updateAll(window.location.pathname + window.location.search + newHash, push, triggerPopState);
+       
         return this;
     }
 

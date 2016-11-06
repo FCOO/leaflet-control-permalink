@@ -70,7 +70,8 @@
             var params = window.Url.stringify(this._params);
 
             if (this.options.useLocation)
-                window.Url.hash(params);
+                window.Url._updateAll(window.location.pathname + window.location.search + '#' + params);
+
 
             if (this.options.useLocalStorage)
                 window.localStorage.setItem('paramsTemp', params);
