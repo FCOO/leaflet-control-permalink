@@ -36,7 +36,7 @@
 
         options: {
             position       : 'bottomright',
-            useLocation    : false,
+            useLocation    : true,
             useLocalStorage: false,
             urlParseOptions: { 
                 convertBoolean: true, 
