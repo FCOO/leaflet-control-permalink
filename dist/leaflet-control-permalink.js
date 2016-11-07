@@ -37,7 +37,12 @@
         options: {
             position       : 'bottomright',
             useLocation    : false,
-            useLocalStorage: false
+            useLocalStorage: false,
+            urlParseOptions: { 
+                convertBoolean: true, 
+                convertNumber : true, 
+                convertJSON   : true
+            }
         },
 
         initialize: function (options) {
@@ -57,7 +62,7 @@
             L.DomEvent.disableClickPropagation(container);
             this._map = map;
 
-            this.fire('update', {params: this._params});
+            this._fireUpdate();
     
             L.DomEvent.on( window, 'hashchange', this._set_urlvars, this );
 
@@ -70,15 +75,19 @@
             var params = window.Url.stringify(this._params);
 
             if (this.options.useLocation)
-                window.Url._updateAll(window.location.pathname + window.location.search + '#' + params);
-
+                window.Url.updateSearchAndHash(window.location.search, params);
 
             if (this.options.useLocalStorage)
                 window.localStorage.setItem('paramsTemp', params);
 
         },
     
-   
+        _fireUpdate: function(){
+            if (this.options.urlParseOptions)
+              window.Url._parseObject( this._params, null, null, this.options.urlParseOptions );
+            this.fire('update', {params: this._params});
+        },
+
         _update: function (obj) {
             for (var i in obj) {
                 if (!obj.hasOwnProperty(i)) continue;
@@ -108,7 +117,7 @@
 
             this._params = p;
             this._update_href();
-            this.fire('update', {params: this._params});
+            this._fireUpdate();
         }
     });
     
@@ -163,8 +172,8 @@
                 }
                 return defaultValue;
             }
-            var params = e.params,
-                _map = this._map,
+
+            var _map = this._map,
                 bounds = _map.options.maxBounds || L.latLngBounds([-90, -999999], [+90, +999999]),
                 minLat = Math.min( bounds.getNorth(),  bounds.getSouth() ),
                 maxLat = Math.max( bounds.getNorth(),  bounds.getSouth() ),
@@ -173,10 +182,10 @@
 
             this._map.setView(
                 L.latLng( 
-                    validate( params.lat, minLat, maxLat, _map.getCenter().lat ), 
-                    validate( params.lon, minLng, maxLng, _map.getCenter().lng )
+                    validate( e.params.lat, minLat, maxLat, _map.getCenter().lat ), 
+                    validate( e.params.lon, minLng, maxLng, _map.getCenter().lng )
                 ), 
-                validate( params.zoom, _map.getMinZoom(), _map.getMaxZoom(), _map.getZoom() )
+                validate( e.params.zoom, _map.getMinZoom(), _map.getMaxZoom(), _map.getZoom() )
             );
 
         },
