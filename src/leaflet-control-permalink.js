@@ -64,7 +64,7 @@
 
             this._fireUpdate();
     
-            L.DomEvent.on( window, 'hashchange', this._set_urlvars, this );
+            //REMOVED TEMP - REINSERT WHEN url.js-extension IS UPDATED TO PREVENT MULTI-CALL OF 'hashchange':  L.DomEvent.on( window, 'hashchange', this._set_urlvars, this );
 
             this.fire('add', {map: map});
     
