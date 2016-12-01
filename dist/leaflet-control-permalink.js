@@ -136,9 +136,9 @@
             this._update_center_and_zoom();
         },
 
-        _update_center_and_zoom: function() {
-            if (!this._map) return;
-        
+        _round_latlng: function( latLng ){
+            if (!this._map) return latLng;            
+
             //********************************
             function round(x, p) {
                 if (p === 0) return x;
@@ -151,16 +151,22 @@
                 return Math.floor(x)/shift;
             }
             //********************************
-            var bounds = this._map.getBounds(), 
-                size = this._map.getSize(),
+            var size = this._map.getSize(),
+                bounds = this._map.getBounds(), 
                 ne = bounds.getNorthEast(), 
-                sw = bounds.getSouthWest(),
-                point = this._map.getCenter();
+                sw = bounds.getSouthWest();
 
-            point.lat = round(point.lat, (ne.lat - sw.lat) / size.y);
-            point.lng = round(point.lng, (ne.lng - sw.lng) / size.x);
+            return L.latLng(
+                round(latLng.lat, (ne.lat - sw.lat) / size.y), 
+                round(latLng.lng, (ne.lng - sw.lng) / size.x)
+            );
+        },
+
+        _update_center_and_zoom: function() {
+            if (!this._map) return;
+        
+            var point = this._round_latlng( this._map.getCenter() );
             this._update({zoom: String(this._map.getZoom()), lat: String(point.lat), lon: String(point.lng)});
-
         },
 
         _set_center_and_zoom: function(e) {
@@ -175,19 +181,27 @@
 
             var _map = this._map,
                 bounds = _map.options.maxBounds || L.latLngBounds([-90, -999999], [+90, +999999]),
-                minLat = Math.min( bounds.getNorth(),  bounds.getSouth() ),
-                maxLat = Math.max( bounds.getNorth(),  bounds.getSouth() ),
+                minLat = Math.min( bounds.getNorth(), bounds.getSouth() ),
+                maxLat = Math.max( bounds.getNorth(), bounds.getSouth() ),
                 minLng = Math.min( bounds.getWest(),  bounds.getEast() ),
-                maxLng = Math.max( bounds.getWest(),  bounds.getEast() );
+                maxLng = Math.max( bounds.getWest(),  bounds.getEast() ),
+                mapCenter = _map.getCenter(),
 
-            this._map.setView(
-                L.latLng( 
-                    validate( e.params.lat, minLat, maxLat, _map.getCenter().lat ), 
-                    validate( e.params.lon, minLng, maxLng, _map.getCenter().lng )
-                ), 
+                //To prevent the map from panning infinitely due to rounding the map is only updated if the new position would give a new permalink-value
+                mapCenterRound = this._round_latlng( _map.getCenter() ),
+                newCenterRound = this._round_latlng( L.latLng( 
+                                                         validate( e.params.lat, minLat, maxLat, mapCenter.lat ), 
+                                                         validate( e.params.lon, minLng, maxLng, mapCenter.lng )
+                                                     ) 
+                                                   ),
+                newLat = newCenterRound.lat != mapCenterRound.lat ? newCenterRound.lat : mapCenter.lat,
+                newLng = newCenterRound.lng != mapCenterRound.lng ? newCenterRound.lng : mapCenter.lng;
+
+           
+            this._map.setView( 
+                L.latLng( newLat, newLng ), 
                 validate( e.params.zoom, _map.getMinZoom(), _map.getMaxZoom(), _map.getZoom() )
             );
-
         },
     });
 
