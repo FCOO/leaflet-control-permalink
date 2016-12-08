@@ -64,7 +64,7 @@
 
             this._fireUpdate();
     
-            //REMOVED TEMP - REINSERT WHEN url.js-extension IS UPDATED TO PREVENT MULTI-CALL OF 'hashchange':  L.DomEvent.on( window, 'hashchange', this._set_urlvars, this );
+            L.DomEvent.on( window, 'hashchange', this._set_urlvars, this );
 
             this.fire('add', {map: map});
     
@@ -72,13 +72,11 @@
         },
 
         _update_href: function () {
-            var params = window.Url.stringify(this._params);
-
             if (this.options.useLocation)
-                window.Url.updateSearchAndHash(window.location.search, params);
+                window.Url. updateHash( this._params );
 
             if (this.options.useLocalStorage)
-                window.localStorage.setItem('paramsTemp', params);
+                window.localStorage.setItem('paramsTemp', window.Url.stringify(this._params));
 
         },
     

@@ -24532,6 +24532,20 @@ L.control.layers = function (baseLayers, overlays, options) {
     //Using html5-history-api as polyfill for IE9
     var location = window.history.location || window.location;
 
+
+    //Workaround for event.newURL and event.oldURL
+    //let this snippet run before your hashchange event binding code
+    if (!window.HashChangeEvent)(
+        function(){
+            var lastURL= document.URL;
+            window.addEventListener("hashchange", function(event){
+                Object.defineProperty(event,"oldURL",{enumerable:true,configurable:true,value:lastURL});
+                Object.defineProperty(event,"newURL",{enumerable:true,configurable:true,value:document.URL});
+                lastURL = document.URL;
+            });
+        }()
+    );
+
     /******************************************
     anyString(name, notDecoded, search, sep)
     Copy of Url.queryString with optional input string (search) 
@@ -24561,28 +24575,6 @@ L.control.layers = function (baseLayers, overlays, options) {
     }
 
 
-    /******************************************
-    updateSearchAndHash
-    *******************************************/
-    function updateSearchAndHash( searchStr, hashStr, push, triggerPopState ){
-        searchStr = this._correctSearchOrHash( searchStr, '?' ); 
-        hashStr   = this._correctSearchOrHash( hashStr, '#' );
-        var newUrl = window.location.pathname + 
-                     //window.location.protocol + "//" + window.location.host + (window.location.host ? "/" : "") + window.location.pathname +
-                        (searchStr ? '?' + encodeURI(searchStr) : '') + 
-                        (hashStr  ? '#' + encodeURI(hashStr)  : '');
-
-        //If the search is unchanged => only change the hash
-        if (this._correctSearchOrHash(window.location.search, '?') == searchStr){
-            window.location.hash = hashStr;            
-//            return this;
-        }        
-        else 
-            this._updateAll( newUrl, push, triggerPopState );          
-        return newUrl;
-    }
-
-    
     /******************************************
     _correctSearchOrHash
     Check and correct search or hash = ID_VALUE[&ID_VALUE]
@@ -24672,12 +24664,35 @@ L.control.layers = function (baseLayers, overlays, options) {
     Check and correct the url
     *******************************************/
     function adjustUrl(){ 
-        return this.updateSearchAndHash( 
-                   window.location.search,
-                   window.location.hash
-               );
+        var oldSearch = window.location.search,
+            newSearch = this._correctSearchOrHash( oldSearch, '?' ),
+            oldHash   = window.location.hash,
+            newHash   = this._correctSearchOrHash( oldHash, '#' ),
+            newUrl    = window.location.pathname +  //OR window.location.protocol + "//" + window.location.host + (window.location.host ? "/" : "") + window.location.pathname +
+                          (newSearch ? '?' + encodeURI(newSearch) : '') + 
+                          (newHash   ? '#' + encodeURI(newHash)   : '');
+
+        //If the search is unchanged => only change the hash - and only if hash is changed
+        if (oldSearch.substring(1) == newSearch){
+            if (oldHash.substring(1) != newHash)
+                window.location.hash = newHash;            
+        }        
+        else 
+            this._updateAll( newUrl );          
+        return newUrl;
     }
 
+    /******************************************
+    onHashchange( handler [, context])
+    Add handler = function( event) to the event "hashchange"
+    Can by omitted if the hash-tag is updated using 
+    Url.updateHashParam(..) or Url.updateHash(..)
+    *******************************************/
+    function onHashchange( handler, context ){
+        this.hashchange = this.hashchange || [];
+        this.hashchange.push( $.proxy(handler, context) );
+    }
+   
     /******************************************
     hashString
     Same as queryString but for the hash
@@ -24696,10 +24711,24 @@ L.control.layers = function (baseLayers, overlays, options) {
     }
 
     /******************************************
-    updateHashParam
-    Same as updateSearchParam but for the hash
+    updateHash(hashObj, dontCallHashChange)
+    Update hash-tag with the id-value in hashObj
+    If dontCallHashChange==true the hashchange-event-functions 
+    added with Url.onHashchange( function[, context]) will not be called
     *******************************************/
-    function updateHashParam(hashParam, value, push, triggerPopState){
+    function updateHash(hashObj, dontCallHashChange){
+        this.dontCallHashChange = dontCallHashChange;
+        var newHash = this.stringify( $.extend({}, this.parseHash(), hashObj || {}) );
+        return window.location.hash = newHash;
+    }
+     
+    /******************************************
+    updateHashParam
+    Adds, updates or deletes a hash-tag
+    If dontCallHashChange==true the hashchange-event-functions 
+    added with Url.onHashchange( function[, context]) will not be called
+    *******************************************/
+    function updateHashParam(hashParam, value, dontCallHashChange){
         var hashParsed = this.parseHash();
         if (value === undefined){
             delete hashParsed[hashParam];
@@ -24709,10 +24738,8 @@ L.control.layers = function (baseLayers, overlays, options) {
                 return this;
             hashParsed[hashParam] = value;
         }
-        return this.updateSearchAndHash( 
-                    window.location.search, 
-                    this.stringify(hashParsed), 
-                    push, triggerPopState ); 
+        this.dontCallHashChange = dontCallHashChange;
+        return window.location.hash = this.stringify(hashParsed);
     }
 
 
@@ -24870,17 +24897,36 @@ L.control.layers = function (baseLayers, overlays, options) {
     /******************************************
     onHashChange()
     ******************************************/
-    function onHashChange(){
-        this.adjustUrl();
+    function onHashChange( event ){
+        //Adjust the hash-tag
+        var oldHash = window.location.hash,
+            newHash = this._correctSearchOrHash( oldHash, '#' );
+
+        if ( decodeURIComponent(oldHash.substring(1)) != decodeURIComponent(newHash) ){
+          window.location.hash = newHash; //Will trig a new call of onHashChange
+        }
+        else {
+            if (this.dontCallHashChange){
+                this.dontCallHashChange = false;
+                return;
+            }
+            //Fire the events added with Url.onHashchange
+            this.hashchange = this.hashchange || [];
+            for (var i=0; i<this.hashchange.length; i++ )
+                this.hashchange[i]( event );
+        }
     }
 
+    /******************************************
     //Extend window.Url with the new methods
+    ******************************************/
     $.extend( window.Url, {
-        updateSearchAndHash : updateSearchAndHash,
         _correctSearchOrHash: _correctSearchOrHash,
         adjustUrl           : adjustUrl,
+        onHashchange        : onHashchange,
         hashString          : hashString,
         parseHash           : parseHash,
+        updateHash          : updateHash,
         updateHashParam     : updateHashParam,
         validateValue       : validateValue,
         _parseObject        : _parseObject,
@@ -24888,8 +24934,8 @@ L.control.layers = function (baseLayers, overlays, options) {
         onHashChange        : onHashChange
     });
 
-
-    $(window).on( 'hashchange', $.proxy( onHashChange, window.Url ) );
+    //Add the 'global' hashchange-event-methods
+    window.addEventListener("hashchange", $.proxy( onHashChange, window.Url ), false);
 
 
 
