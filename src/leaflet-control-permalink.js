@@ -73,7 +73,7 @@
 
         _update_href: function () {
             if (this.options.useLocation)
-                window.Url. updateHash( this._params, true );
+                window.Url.updateHash( this._params, true );
 
             if (this.options.useLocalStorage)
                 window.localStorage.setItem('paramsTemp', window.Url.stringify(this._params));

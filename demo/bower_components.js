@@ -24719,7 +24719,9 @@ L.control.layers = function (baseLayers, overlays, options) {
     function updateHash(hashObj, dontCallHashChange){
         this.dontCallHashChange = dontCallHashChange;
         var newHash = this.stringify( $.extend({}, this.parseHash(), hashObj || {}) );
-        return window.location.hash = newHash;
+
+        //return window.location.hash = '#'+newHash;
+        return this._updateAll(window.location.pathname + window.location.search + '#' + newHash, false);
     }
      
     /******************************************
@@ -24739,7 +24741,10 @@ L.control.layers = function (baseLayers, overlays, options) {
             hashParsed[hashParam] = value;
         }
         this.dontCallHashChange = dontCallHashChange;
-        return window.location.hash = this.stringify(hashParsed);
+
+        //return window.location.hash = this.stringify(hashParsed);
+        return this._updateAll(window.location.pathname + window.location.search + '#' + this.stringify(hashParsed), false);
+
     }
 
 

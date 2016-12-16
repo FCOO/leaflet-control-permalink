@@ -1,6 +1,6 @@
 {
   "name": "leaflet-control-permalink",
-  "version": "1.2.2",
+  "version": "1.3.0",
   "homepage": "https://github.com/FCOO/leaflet-control-permalink",
   "authors": [
     "Niels Holt"
@@ -16,7 +16,7 @@
   "dependencies": {
     "jquery": "latest",
     "leaflet": "latest",
-    "url.js-extensions": "fcoo/url.js-extensions#~1.6.0"
+    "url.js-extensions": "fcoo/url.js-extensions#~1.7.0"
   },
   "devDependencies": {},
   "license": "MIT",
