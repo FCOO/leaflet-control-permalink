@@ -10,11 +10,11 @@
     <meta name='owner' content='FCOO'>
 
   <link  href="bower_components.css" rel="stylesheet">    
-  <link  href="../src/leaflet-control-permalink.css" rel="stylesheet">    
 </head>
 
 <body style="width: 100%; height: 100%; margin:0">
-    <div id="map" style="width: 100%; height: 100%"></div>
+    <div id="map" style="float: left; box-sizing: border-box; border:1px solid black; width: 50%; height: 100%"></div>
+    <div id="map2" style="float:right; box-sizing: border-box; border:1px solid black; width: 50%; height: 100%"></div>
 
 
     
@@ -29,7 +29,11 @@
                           maxBounds: L.latLngBounds([-90, -230], [+90, +230])
                       });
 
-            L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom: 18,attribution: '&copy; <a href="http://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors</a>'})
+            L.tileLayer(
+                'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', 
+                {   maxZoom: 18,
+                    attribution: '&copy; <a href="http://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors</a>'
+                 })
                 .addTo(map);
 
             var permalinkControl = new L.Control.Permalink({
@@ -40,6 +44,26 @@
 
 
 
+
+            var map2 = L.map('map2', {
+                          center   : [56.2, 11.5],
+                          zoom     : 6,
+                          maxBounds: L.latLngBounds([-90, -230], [+90, +230])
+                      });
+
+            L.tileLayer(
+                'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', 
+                {   maxZoom: 18,
+                    attribution: '&copy; <a href="http://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors</a>'
+                 })
+                .addTo(map2);
+
+            var permalinkControl2 = new L.Control.Permalink({
+                useLocation: true,
+                useLocalStorage: false,
+                postfix: '2',
+             });
+            map2.addControl(permalinkControl2);
 
         });
 

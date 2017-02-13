@@ -38,6 +38,7 @@
             position       : 'bottomright',
             useLocation    : true,
             useLocalStorage: false,
+            postfix        : '',
             urlParseOptions: { 
                 convertBoolean: true, 
                 convertNumber : true, 
@@ -114,7 +115,7 @@
                 return;
 
             this._params = p;
-            this._update_href();
+            this._update_href(); 
             this._fireUpdate();
         }
     });
@@ -163,8 +164,13 @@
         _update_center_and_zoom: function() {
             if (!this._map) return;
         
-            var point = this._round_latlng( this._map.getCenter() );
-            this._update({zoom: String(this._map.getZoom()), lat: String(point.lat), lon: String(point.lng)});
+            var point = this._round_latlng( this._map.getCenter() ),
+                postfix = this.options.postfix,
+                params = {};
+            params['zoom'+postfix] = String(this._map.getZoom());
+            params['lat'+postfix]  = String(point.lat); 
+            params['lon'+postfix]  = String(point.lng);
+            this._update( params );
         },
 
         _set_center_and_zoom: function(e) {
@@ -178,6 +184,7 @@
             }
 
             var _map = this._map,
+                postfix = this.options.postfix,
                 bounds = _map.options.maxBounds || L.latLngBounds([-90, -999999], [+90, +999999]),
                 minLat = Math.min( bounds.getNorth(), bounds.getSouth() ),
                 maxLat = Math.max( bounds.getNorth(), bounds.getSouth() ),
@@ -188,8 +195,8 @@
                 //To prevent the map from panning infinitely due to rounding the map is only updated if the new position would give a new permalink-value
                 mapCenterRound = this._round_latlng( _map.getCenter() ),
                 newCenterRound = this._round_latlng( L.latLng( 
-                                                         validate( e.params.lat, minLat, maxLat, mapCenter.lat ), 
-                                                         validate( e.params.lon, minLng, maxLng, mapCenter.lng )
+                                                         validate( e.params['lat'+postfix], minLat, maxLat, mapCenter.lat ), 
+                                                         validate( e.params['lon'+postfix], minLng, maxLng, mapCenter.lng )
                                                      ) 
                                                    ),
                 newLat = newCenterRound.lat != mapCenterRound.lat ? newCenterRound.lat : mapCenter.lat,
@@ -198,7 +205,7 @@
            
             this._map.setView( 
                 L.latLng( newLat, newLng ), 
-                validate( e.params.zoom, _map.getMinZoom(), _map.getMaxZoom(), _map.getZoom() )
+                validate( e.params['zoom'+postfix], _map.getMinZoom(), _map.getMaxZoom(), _map.getZoom() )
             );
         },
     });
