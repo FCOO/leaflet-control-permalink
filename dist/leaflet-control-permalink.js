@@ -38,6 +38,7 @@
             position       : 'bottomright',
             useLocation    : true,
             useLocalStorage: false,
+            localStorageId : 'paramsTemp',
             postfix        : '',
             urlParseOptions: { 
                 convertBoolean: true, 
@@ -77,7 +78,7 @@
                 window.Url.updateHash( this._params, true );
 
             if (this.options.useLocalStorage)
-                window.localStorage.setItem('paramsTemp', window.Url.stringify(this._params));
+                window.localStorage.setItem(this.options.localStorageId, window.Url.stringify(this._params));
 
         },
     
@@ -102,7 +103,7 @@
         _set_urlvars: function (){
             var p = window.Url.parseHash();
             if (this.options.useLocalStorage)
-                p = window.Url.parseQuery( window.localStorage.getItem('paramsTemp') || '' );
+                p = window.Url.parseQuery( window.localStorage.getItem(this.options.localStorageId) || '' );
             
             function eq (x, y) {
                 for (var i in x)

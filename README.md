@@ -42,8 +42,10 @@ To include the setting for a given control (or other) eg. named "myControl" incl
 | Id | Type | Default | Description |
 | :--: | :--: | :-----: | --- |
 | `position` | `string` | `"bottomright"` | The leaflet control position |
+| `postfix` | `string` | `""` | A postfix for all parameter. Makes it possible to have the same parameter from two or more maps in the same permalink - E.g. `#zoom1=4&zoom2=6` |
 | `useLocation` | `boolean` | `true` | If <code>true</code> the settings are saved in the hash-tag of the url |
 | `useLocalStorage` | `boolean` | `false` | If <code>true</code> the settings are saved as `localStorage`  |
+| `localStorageId` | `string` | `"paramsTemp"` | The id used to save the settings as `localStorage`  |
 | `urlParseOptions` | `object` or `null` | <code>{convertBoolean: true,</code><br><code>convertNumber: true,</code><br><code>convertJSON: true }</code> | If not <code>null</code> the settings are parsed using the [window.Url._parseObject(...)](https://github.com/FCOO/url.js-extensions#_parseobject-obj-validatorobj-defaultobj-options-) to parse `boolean`, `number` and `JSON-objects` before returned to the added controls |
 
 
