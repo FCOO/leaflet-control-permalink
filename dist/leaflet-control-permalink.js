@@ -89,6 +89,9 @@
         },
 
         _update: function (obj) {
+            //Update parameter to include changes from other maps
+            this._params = this._get_params_from_url();
+
             for (var i in obj) {
                 if (!obj.hasOwnProperty(i)) continue;
                 if (obj[i] !== null && obj[i] !== undefined)
@@ -100,22 +103,30 @@
             this._update_href();
         },
     
-        _set_urlvars: function (){
-            var p = window.Url.parseHash();
+
+        _get_params_from_url: function(){
+            var result = window.Url.parseHash();
             if (this.options.useLocalStorage)
-                p = window.Url.parseQuery( window.localStorage.getItem(this.options.localStorageId) || '' );
-            
+                result = window.Url.parseQuery( window.localStorage.getItem(this.options.localStorageId) || '' );
+            return result;
+        },
+
+        _set_urlvars: function (){
+            //************************************************
             function eq (x, y) {
                 for (var i in x)
                     if (x.hasOwnProperty(i) && x[i] !== y[i])
                         return false;
                 return true;
             }
+            //************************************************
                 
-            if (eq(p, this._params) && eq(this._params, p))
+            var new_params = this._get_params_from_url();
+
+            if (eq(new_params, this._params) && eq(this._params, new_params))
                 return;
 
-            this._params = p;
+            this._params = new_params;
             this._update_href(); 
             this._fireUpdate();
         }
@@ -184,8 +195,13 @@
                 return defaultValue;
             }
 
+            //Check if this._maps etc is set. Added to try to fix error in Safari 
+            if (!(e && e.params && this._map && this.options))
+                return;
+
+
             var _map = this._map,
-                postfix = this.options.postfix,
+                postfix = this.options.postfix || '',
                 bounds = _map.options.maxBounds || L.latLngBounds([-90, -999999], [+90, +999999]),
                 minLat = Math.min( bounds.getNorth(), bounds.getSouth() ),
                 maxLat = Math.max( bounds.getNorth(), bounds.getSouth() ),
