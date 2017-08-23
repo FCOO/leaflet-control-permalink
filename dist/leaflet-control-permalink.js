@@ -32,8 +32,6 @@
     "use strict";
 
     L.Control.Permalink = L.Control.extend({
-        includes: L.Mixin.Events, 
-//includes: L.Evented,
         options: {
             position       : 'bottomright',
             useLocation    : true,
