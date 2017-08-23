@@ -32,8 +32,6 @@
     "use strict";
 
     L.Control.Permalink = L.Control.extend({
-        includes: L.Mixin.Events, 
-
         options: {
             position       : 'bottomright',
             useLocation    : true,
@@ -47,7 +45,18 @@
             }
         },
 
+        //Bug fix to overcome that "Deprecated include of L.Mixin.Events: this property will be removed in future releases" 
+        on: function(){
+            this._evented.on.apply( this._evented, arguments );
+        },
+        fire: function(){
+            this._evented.fire.apply( this._evented, arguments );
+        },
+
         initialize: function (options) {
+
+            this._evented = new L.Evented();
+
             L.Util.setOptions(this, options);
             this._params = {};
 
